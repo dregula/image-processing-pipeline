@@ -5,29 +5,29 @@ import numpy as np
 from pipeline.pipeline import Pipeline
 
 
-class SaveSummary(Pipeline):
+class SaveMatchSummary(Pipeline):
     """Pipeline task to save processing summary."""
 
     def __init__(self, filename):
         self.filename = filename
 
         self.summary = {}
-        super(SaveSummary, self).__init__()
+        super(SaveMatchSummary, self).__init__()
 
     def map(self, data):
-        image_id = data["image_id"]
-        face_files = data["face_files"]
-        faces = data["faces"]
+        template_image_id = data["template_image_id"]
+        match_files = data["match_files"]
+        matches = data["matches"]
 
         # Loop over all detected faces and buffer summary results
-        self.summary[image_id] = {}
-        for i, face in enumerate(faces):
-            box, confidence = face
-            (x1, y1, x2, y2) = box.astype("int")
-            face_file = face_files[i]
-            self.summary[image_id][face_file] = {
+        self.summary[template_image_id] = {}
+        for i, match in enumerate(matches):
+            box, value = match
+            (x1, y1, x2, y2) = np.array(box).astype("int")
+            match_file = match_files[i]
+            self.summary[template_image_id][match_file] = {
                 "box": np.array([x1, y1, x2, y2], dtype=int).tolist(),
-                "confidence": confidence.item()
+                "value": value.item()
             }
 
         return data

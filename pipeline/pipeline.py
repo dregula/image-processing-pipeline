@@ -41,4 +41,3 @@ class Pipeline(object):
         """Overwrite to stop the generator in certain conditions."""
 
         return True
-
