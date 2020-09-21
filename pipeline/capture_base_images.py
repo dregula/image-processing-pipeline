@@ -6,7 +6,7 @@ import pipeline.libs.utils as utils
 # TRY: 2020-09-20 ignore this class and use a single base_image in main()
 class CaptureBaseImages(Pipeline):
     """Pipeline task to capture images from directory"""
-
+    # level=0 does not walk down subdirectories
     def __init__(self, src_dir, valid_exts=(".tiff", ".tif", ".jpg", ".png"), level=None):
         self.src_dir = src_dir
         self.valid_exts = valid_exts

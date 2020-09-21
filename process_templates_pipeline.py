@@ -1,4 +1,5 @@
 import os
+from tqdm import tqdm
 import cv2
 
 import pipeline.libs.utils as utils
@@ -8,7 +9,9 @@ from pipeline.detect_template_match import DetectTemplateMatch
 from pipeline.save_matches_as_marked_images import SaveMatches
 from pipeline.save_match_summary import SaveMatchSummary
 from pipeline.display_match_summary import DisplayMatchSummary
-
+from pipeline.annotate_marked_image import AnnotateMarkedImage
+from pipeline.display_marked_images import DisplayMarkedImages
+from pipeline.capture_video import CaptureVideo
 
 def parse_args():
     import argparse
@@ -27,6 +30,10 @@ def parse_args():
                     help="opencv match-template method")
     ap.add_argument("-th", "--threshold", type=float,  default=0.8,
                     help="threshold to filter weak template matches")
+    ap.add_argument("-ov", "--out-video", default=None,
+                    help="output video file name")
+    ap.add_argument("-p", "--progress", action="store_true", help="display progress")
+    ap.add_argument("-d", "--display", action="store_true", help="display video result")
     ap.add_argument("--batch-size", type=int, default=1,
                     help="batch size")
 
@@ -35,11 +42,14 @@ def parse_args():
 
 def main(args):
     # Create pipeline steps
+    #  capture_video = CaptureVideo(int(args.input) if args.input.isdigit() else args.input)
+    # capture_video = None
 
-    capture_base_images = CaptureBaseImages(args.base_dir, level=1)
+    capture_base_images = CaptureBaseImages(args.base_dir, level=0)
 
-    capture_template_images = CaptureTemplateImages(args.template_dir, level=1)
+    capture_template_images = CaptureTemplateImages(args.template_dir, level=0)
 
+    # note: this stage takes the longest! consider parallelizing
     detect_template_matches = DetectTemplateMatch(cv_template_method=args.cv_template_method,
                                                   threshold=args.threshold, batch_size=args.batch_size)
 
@@ -49,25 +59,49 @@ def main(args):
 
     display_match_summary = DisplayMatchSummary()
 
+    # annotate_marked_images = AnnotateMarkedImage("annotated_image") \
+    #     if args.display or args.out_video else None
+
+    # display_marked_images = DisplayMarkedImages("annotated_image") \
+    #     if args.display else None
+
     # Create image processing pipeline
     pipeline = (capture_base_images |
                 capture_template_images |
                 detect_template_matches |
                 save_matches |
                 save_match_summary |
-                display_match_summary)
+                display_match_summary
+                # annotate_marked_images |
+                # display_marked_images
+                )
 
+# Iterate through pipeline
+# if capture_video and capture_video is not None:
+#     progress = tqdm(total=capture_video.frame_count if capture_video.frame_count > 0 else None,
+#                     disable=not args.progress)
     try:
-        # Iterate through pipeline
         for _ in pipeline:
             pass
+            # progress.update(1)
     except StopIteration:
         return
     except KeyboardInterrupt:
         return
     finally:
-        print(f"[INFO] Saving summary to {summary_file}...")
-        save_match_summary.write()
+        pass
+        # progress.close()
+
+        # Pipeline cleanup
+        # if capture_video:
+        #     capture_video.cleanup()
+        # if display_video:
+        #     display_video.cleanup()
+        # if save_video:
+        #     save_video.cleanup()
+
+    print(f"[INFO] Saving summary to {summary_file}...")
+    save_match_summary.write()
 
     exit("done")
 

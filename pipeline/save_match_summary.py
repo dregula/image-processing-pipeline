@@ -22,12 +22,12 @@ class SaveMatchSummary(Pipeline):
         # Loop over all detected faces and buffer summary results
         self.summary[template_image_id] = {}
         for i, match in enumerate(matches):
-            box, value = match
+            box, confidence = match
             (x1, y1, x2, y2) = np.array(box).astype("int")
             match_file = match_files[i]
             self.summary[template_image_id][match_file] = {
                 "box": np.array([x1, y1, x2, y2], dtype=int).tolist(),
-                "value": value.item()
+                "confidence": confidence.item()
             }
 
         return data

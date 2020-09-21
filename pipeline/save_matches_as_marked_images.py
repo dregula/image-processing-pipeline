@@ -39,7 +39,7 @@ class SaveMatches(Pipeline):
 
         # Loop over all detected faces
         for i, match in enumerate(matches):
-            box, value = match
+            box, confidence = match
             marked_image = base_image.copy()
             # do not allow a negative number,as the image, cannot be cropped with below
             (x1, y1, x2, y2) = np.maximum(np.array(box).astype("int"), 0)

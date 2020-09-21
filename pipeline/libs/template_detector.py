@@ -23,19 +23,19 @@ class TemplateDetector:
             # TODO: or an injected lib
             filtered = np.where(result >= self.threshold)
 
-            value_at_location = result[filtered]
+            confidence_at_location = result[filtered]
             matched_points = list(zip(*filtered[::-1]))
-            matched_points_with_value = list(zip(matched_points, value_at_location))
+            matched_points_with_value = list(zip(matched_points, confidence_at_location))
 
             w, h, c = template_image.shape
 
             # append each (box, value) tuple in filtered_results
             box = [0, 0, 0, 0]
-            for pt, val in matched_points_with_value:
+            for pt, confidence in matched_points_with_value:
 
                 # box: (x1, x2, y1, y2); recall maxLoc point is h, w
                 box = pt[0], pt[1], pt[0] + h, pt[1] + w
                 # Add result
-                matches[template_image_idx].append((box, val))
+                matches[template_image_idx].append((box, confidence))
 
         return matches
