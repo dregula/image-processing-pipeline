@@ -6,9 +6,10 @@ from pipeline.pipeline import Pipeline
 
 
 class SaveMatches(Pipeline):
-    """Pipeline task to save detected faces."""
+    """Pipeline task to save detected matches."""
 
-    def __init__(self, path, image_ext="jpg"):
+    def __init__(self, base_image: np.ndarray, path, image_ext="jpg"):
+        self.base_image = base_image
         self.path = path
         self.image_ext = image_ext
 
@@ -30,17 +31,14 @@ class SaveMatches(Pipeline):
         return cv2.resize(image, dim, interpolation=inter)
 
     def map(self, data):
-        # TODO: extend for multiple base images
-        base_image = data["base_image"]
         template_image_id = data["template_image_id"]
-        # template_image = data["template_image"]
         matches = data["matches"]
         data["match_files"] = []
 
         # Loop over all detected faces
         for i, match in enumerate(matches):
             box, confidence = match
-            marked_image = base_image.copy()
+            marked_image = self.base_image.copy()
             # do not allow a negative number,as the image, cannot be cropped with below
             (x1, y1, x2, y2) = np.maximum(np.array(box).astype("int"), 0)
 

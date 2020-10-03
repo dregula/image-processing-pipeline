@@ -3,26 +3,30 @@ import cv2
 from pipeline.pipeline import Pipeline
 
 
-class DisplayVideo(Pipeline):
+class DisplayMarkedImages(Pipeline):
     """Pipeline task to display images as a video."""
 
-    def __init__(self, src, window_name=None, org=None):
+    # note: src is expected to be a video, previously defined in capture_video, then annotated in annotate_
+    def __init__(self, src, window_name=None, window_location=None):
         self.src = src
         self.window_name = window_name if window_name else src
 
         cv2.startWindowThread()
         cv2.namedWindow(self.window_name, cv2.WINDOW_AUTOSIZE)
-        if org:
+        if window_location:
             # Set the window position
-            x, y = org
+            x, y = window_location
             cv2.moveWindow(self.window_name, x, y)
 
-        super(DisplayVideo, self).__init__()
+        super(DisplayMarkedImages, self).__init__()
 
     def map(self, data):
         image = data[self.src]
 
         cv2.imshow(self.window_name, image)
+
+        # DEBUG
+        cv2.waitKey()
 
         # Exit?
         key = cv2.waitKey(1) & 0xFF

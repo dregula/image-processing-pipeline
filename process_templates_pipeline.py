@@ -11,13 +11,25 @@ from pipeline.save_match_summary import SaveMatchSummary
 from pipeline.display_match_summary import DisplayMatchSummary
 from pipeline.annotate_marked_image import AnnotateMarkedImage
 from pipeline.display_marked_images import DisplayMarkedImages
+
+
 # from pipeline.capture_video import CaptureVideo
 
 def parse_args():
-    import argparse
+    import configargparse
+    import yaml
 
     # Parse command line arguments
-    ap = argparse.ArgumentParser(description="Image processing pipeline")
+    # ap = argparse.ArgumentParser(description="Image processing pipeline")
+    # ap = configargparse.ArgumentParser(description="Image processing pipeline")
+    ap = configargparse.getParser(default_config_files=["config.yaml"],
+                                  config_file_parser_class=configargparse.ConfigparserConfigFileParser)
+    # from config.yaml
+    ap.add_argument('--philips_exported_tiff', type=yaml.safe_load)
+    ap.add_argument('--amscope_mu1804', type=yaml.safe_load)
+    ap.add_argument('--olympus_bx41', type=yaml.safe_load)
+
+    # usually from commandline arguments
     ap.add_argument("-b", "--base_dir", required=True,
                     help="path to base images directory")
     ap.add_argument("-t", "--template_dir", required=True,
@@ -28,7 +40,7 @@ def parse_args():
                     help="output JSON summary file name")
     ap.add_argument("-c", "--cv_template_method", type=int, default=int(cv2.TM_CCOEFF_NORMED),
                     help="opencv match-template method")
-    ap.add_argument("-th", "--threshold", type=float,  default=0.8,
+    ap.add_argument("-th", "--threshold", type=float, default=0.8,
                     help="threshold to filter weak template matches")
     ap.add_argument("-ov", "--out-video", default=None,
                     help="output video file name")
@@ -46,7 +58,6 @@ def main(args):
     # capture_video = None
 
     capture_base_images = CaptureBaseImages(args.base_dir, level=0)
-    # note: this stage takes the longest! consider parallelizing
     # TODO either abandon multiple base_images or refactor entirely for a single base_image
     if capture_base_images.has_next():
         test = capture_base_images.source
@@ -57,6 +68,7 @@ def main(args):
 
     capture_template_images = CaptureTemplateImages(args.template_dir, level=0)
 
+    # note: this stage takes the longest! consider parallelizing
     detect_template_matches = DetectTemplateMatch(base_image, cv_template_method=args.cv_template_method,
                                                   threshold=args.threshold, batch_size=args.batch_size)
 
@@ -83,10 +95,10 @@ def main(args):
                 # display_marked_images
                 )
 
-# Iterate through pipeline
-# if capture_video and capture_video is not None:
-#     progress = tqdm(total=capture_video.frame_count if capture_video.frame_count > 0 else None,
-#                     disable=not args.progress)
+    # Iterate through pipeline
+    # if capture_video and capture_video is not None:
+    #     progress = tqdm(total=capture_video.frame_count if capture_video.frame_count > 0 else None,
+    #                     disable=not args.progress)
     try:
         for _ in pipeline:
             pass

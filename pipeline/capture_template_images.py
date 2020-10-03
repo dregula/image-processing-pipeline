@@ -34,29 +34,16 @@ class CaptureTemplateImages(Pipeline):
             except StopIteration:
                 stop = True
 
-            # try:
-            #     # Buffer the pipeline stream
-            #     data = next(self.source)
-            #     batch.append(data)
-            # except StopIteration:
-            #     stop = True
-
             if len(batch) and (len(batch) == self.batch_size or stop):
                 # batch is an array of dicts
                 batch = []
                 for template_image_idx, template_image_file in enumerate(template_source):
                     template_image = cv2.imread(template_image_file)
-                    # promote the base_image
-                    # TODO: this duplicates the base Image in EVERY template
                     current_template_dict = {}
                     current_template_dict["template_image_id"] = template_image_file
                     current_template_dict["template_image"] = template_image
 
                     batch.append(current_template_dict)
-                    # batch[template_image_idx]["base_image_file"] = base_image_file
-                    # batch[template_image_idx]["base_image"] = base_image
-                    # batch[template_image_idx]["template_image_id"] = template_image_file
-                    # batch[template_image_idx]["template_image"] = template_image
 
                 # Yield all the data from buffer
                 for data in batch:
