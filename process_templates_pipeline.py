@@ -11,7 +11,7 @@ from pipeline.save_match_summary import SaveMatchSummary
 from pipeline.display_match_summary import DisplayMatchSummary
 from pipeline.annotate_marked_image import AnnotateMarkedImage
 from pipeline.display_marked_images import DisplayMarkedImages
-from pipeline.capture_video import CaptureVideo
+# from pipeline.capture_video import CaptureVideo
 
 def parse_args():
     import argparse
@@ -46,14 +46,22 @@ def main(args):
     # capture_video = None
 
     capture_base_images = CaptureBaseImages(args.base_dir, level=0)
+    # note: this stage takes the longest! consider parallelizing
+    # TODO either abandon multiple base_images or refactor entirely for a single base_image
+    if capture_base_images.has_next():
+        test = capture_base_images.source
+        list_cap_base = list(capture_base_images)
+        first_capture_base_item = list_cap_base[0]
+        if "base_image" in first_capture_base_item:
+            base_image = first_capture_base_item["base_image"]
 
     capture_template_images = CaptureTemplateImages(args.template_dir, level=0)
 
-    # note: this stage takes the longest! consider parallelizing
-    detect_template_matches = DetectTemplateMatch(cv_template_method=args.cv_template_method,
+    detect_template_matches = DetectTemplateMatch(base_image, cv_template_method=args.cv_template_method,
                                                   threshold=args.threshold, batch_size=args.batch_size)
 
-    save_matches = SaveMatches(args.output_dir)
+    # TODO: messy to have to inject the base_image again!
+    save_matches = SaveMatches(base_image, args.output_dir)
     summary_file = os.path.join(args.output_dir, args.out_summary)
     save_match_summary = SaveMatchSummary(summary_file)
 
@@ -66,8 +74,7 @@ def main(args):
     #     if args.display else None
 
     # Create image processing pipeline
-    pipeline = (capture_base_images |
-                capture_template_images |
+    pipeline = (capture_template_images |
                 detect_template_matches |
                 save_matches |
                 save_match_summary |

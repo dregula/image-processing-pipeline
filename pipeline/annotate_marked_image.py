@@ -27,8 +27,8 @@ class AnnotateMarkedImage(Pipeline):
         matches = data["matches"]
 
         # Loop over the matches and draw a rectangle around each
-        for i, face in enumerate(matches):
-            box, confidence = face
+        for i, match in enumerate(matches):
+            box, confidence = match
             (x1, y1, x2, y2) = np.array(box).astype("int")
             cv2.rectangle(annotated_image, (x1, y1), (x2, y2), colors.get("green").to_bgr(), 2)
             put_text(annotated_image, f"{confidence:.2f}", (x1 - 1, y1),

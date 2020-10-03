@@ -13,8 +13,10 @@ class DetectTemplateMatch(Pipeline):
 
     """
 
-    def __init__(self, cv_template_method, threshold, batch_size=1):
-        self.detector = TemplateDetector(cv_template_method=cv_template_method, threshold=threshold)
+    def __init__(self, base_image: np.ndarray, cv_template_method, threshold, batch_size=1):
+        self.base_image = base_image
+        # note: the single bas-image is injected into the TemplateDetector class at initialization
+        self.detector = TemplateDetector(base_image, cv_template_method=cv_template_method, threshold=threshold)
         self.batch_size = batch_size
 
         super(DetectTemplateMatch, self).__init__()
@@ -38,14 +40,9 @@ class DetectTemplateMatch(Pipeline):
             # Check if there is anything in batch.
             # Process it if the size match batch_size or there is the end of the input stream.
             if len(batch) and (len(batch) == self.batch_size or stop):
-                # Prepare base_image--template_images batch
-
-                # TODO: inject base_image less frequently or obtain from another queue?
-                # TODO: adapt detect method in TemplateDetector to accommodate both an array of template_images and an array of base_images (?scaled)
-                base_images = [data["base_image"] for data in batch]
                 template_images = [data["template_image"] for data in batch]
                 # Detect matches for all templates at once
-                matches = self.detector.detect(base_images, template_images)
+                matches = self.detector.detect(self.base_image, template_images)
 
                 # Extract the faces metadata and attache them to the proper image
                 for template_image_idx, matches in matches.items():
